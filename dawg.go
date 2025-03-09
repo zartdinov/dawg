@@ -121,7 +121,7 @@ type dawg struct {
 	nextID         int
 	uncheckedNodes []uncheckedNode
 	minimizedNodes map[string]int
-	nodes          map[int]*node
+	Nodes          map[int]*node
 
 	// if read from a file, this is set
 	r    io.ReaderAt
@@ -144,7 +144,7 @@ func New() Builder {
 	return &dawg{
 		nextID:         1,
 		minimizedNodes: make(map[string]int),
-		nodes: map[int]*node{
+		Nodes: map[int]*node{
 			0: {count: -1},
 		},
 	}
@@ -227,7 +227,7 @@ func (d *dawg) Finish() Finder {
 		var buffer bytes.Buffer
 		d.size, _ = d.Write(&buffer)
 		d.r = bytes.NewReader(buffer.Bytes())
-		d.nodes = nil
+		// d.Nodes = nil
 	}
 
 	finder, _ := Read(d.r, 0)
@@ -251,7 +251,7 @@ func (d *dawg) renumber() {
 		}
 
 		remap[id] = len(remap)
-		node := d.nodes[id]
+		node := d.Nodes[id]
 		for _, edge := range node.edges {
 			process(edge.node)
 		}
@@ -260,13 +260,13 @@ func (d *dawg) renumber() {
 	process(rootNode)
 
 	nodes := make(map[int]*node)
-	for id, node := range d.nodes {
+	for id, node := range d.Nodes {
 		nodes[remap[id]] = node
 		for i := range node.edges {
 			node.edges[i].node = remap[node.edges[i].node]
 		}
 	}
-	d.nodes = nodes
+	d.Nodes = nodes
 }
 
 // Print will print all edges to the standard output
@@ -398,7 +398,7 @@ func (d *dawg) newNode() int {
 }
 
 func (d *dawg) nameOf(nodeid int) string {
-	node := d.nodes[nodeid]
+	node := d.Nodes[nodeid]
 
 	// node name is id_ch:id... for each child
 	buff := bytes.Buffer{}
@@ -417,7 +417,7 @@ func (d *dawg) nameOf(nodeid int) string {
 }
 
 func (d *dawg) setFinal(node int) {
-	d.nodes[node].final = true
+	d.Nodes[node].final = true
 	if node == rootNode {
 		d.hasEmptyWord = true
 	}
@@ -426,12 +426,12 @@ func (d *dawg) setFinal(node int) {
 func (d *dawg) addChild(parent int, ch rune, child int) {
 	//log.Printf("Addchild %v(%v)->%v", parent, string(ch), child)
 	d.numEdges++
-	if d.nodes[child] == nil {
-		d.nodes[child] = &node{
+	if d.Nodes[child] == nil {
+		d.Nodes[child] = &node{
 			count: -1,
 		}
 	}
-	node := d.nodes[parent]
+	node := d.Nodes[parent]
 	if len(node.edges) > 0 && ch <= node.edges[len(node.edges)-1].ch {
 		log.Panic("Not strictly increasing")
 	}
@@ -439,7 +439,7 @@ func (d *dawg) addChild(parent int, ch rune, child int) {
 }
 
 func (d *dawg) replaceChild(parent int, ch rune, child int) {
-	pnode := d.nodes[parent]
+	pnode := d.Nodes[parent]
 	//TODO: should be bsearch
 	i := bsearch(len(pnode.edges), func(i int) int {
 		return int(pnode.edges[i].ch - ch)
@@ -456,7 +456,7 @@ func (d *dawg) replaceChild(parent int, ch rune, child int) {
 	//	parent, string(ch), pnode.edges[i].node,
 	//	parent, string(ch), child)
 
-	delete(d.nodes, pnode.edges[i].node)
+	delete(d.Nodes, pnode.edges[i].node)
 	pnode.edges[i].node = child
 
 }
@@ -467,7 +467,7 @@ func (d *dawg) calculateSkipped(nodeid int) int {
 	// sum of all skipped-over counts of its previous siblings.
 
 	// returns the number of leaves reachable from the node.
-	node := d.nodes[nodeid]
+	node := d.Nodes[nodeid]
 	if node.count >= 0 {
 		return node.count
 	}

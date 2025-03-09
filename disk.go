@@ -92,7 +92,7 @@ func (d *dawg) Write(wIn io.Writer) (int64, error) {
 	// record node addresses, calculate counts and number of edges
 	addresses := make([]uint64, d.NumNodes(), d.NumNodes())
 	var maxChar rune
-	for _, node := range d.nodes {
+	for _, node := range d.Nodes {
 		for _, edge := range node.edges {
 			if edge.ch > maxChar {
 				maxChar = edge.ch
@@ -116,7 +116,7 @@ func (d *dawg) Write(wIn io.Writer) (int64, error) {
 
 		// for each node,
 		for i := range addresses {
-			node := d.nodes[i]
+			node := d.Nodes[i]
 
 			// record its position
 			addresses[i] = pos
@@ -143,7 +143,7 @@ func (d *dawg) Write(wIn io.Writer) (int64, error) {
 				}
 
 				for _, edge := range node.edges {
-					skip += d.nodes[edge.node].count
+					skip += d.Nodes[edge.node].count
 				}
 
 				nskipbits := uint64(bits.Len(uint(skip)))
@@ -181,7 +181,7 @@ func (d *dawg) Write(wIn io.Writer) (int64, error) {
 
 	// for each edge,
 	for i := range addresses {
-		node := d.nodes[i]
+		node := d.Nodes[i]
 		count := 0
 		if node.final {
 			count++
@@ -201,7 +201,7 @@ func (d *dawg) Write(wIn io.Writer) (int64, error) {
 			}
 
 			for _, edge := range node.edges {
-				skip += d.nodes[edge.node].count
+				skip += d.Nodes[edge.node].count
 			}
 
 			nskipbits := uint64(bits.Len(uint(skip)))
@@ -221,7 +221,7 @@ func (d *dawg) Write(wIn io.Writer) (int64, error) {
 					w.WriteBits(uint64(count), int(nskipbits))
 				}
 				w.WriteBits(addresses[edge.node], int(abits))
-				count += d.nodes[edge.node].count
+				count += d.Nodes[edge.node].count
 			}
 		}
 	}
