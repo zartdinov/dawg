@@ -1,4 +1,4 @@
-module github.com/smhanov/dawg
+module github.com/zartdinov/dawg
 
 go 1.15
 

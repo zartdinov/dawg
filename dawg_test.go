@@ -8,7 +8,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/smhanov/dawg"
+	"github.com/zartdinov/dawg"
 )
 
 func testsWords() []string {
